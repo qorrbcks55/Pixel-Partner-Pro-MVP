@@ -7,20 +7,24 @@
 
   <!-- 외부 스타일 -->
   <link rel="stylesheet" href="css/pixel.css">
+  <style>
+    /* 다운로드 버튼 완전 숨김 (접근성/JS 안전 대비) */
+    #dlBar,
+    #dlPNG,
+    #dlSVG { display: none !important; }
+    /* 시맨틱 헤딩은 유지하되 시각적으로만 숨김 (선택) */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  </style>
 </head>
 <body>
   <!-- 홈 버튼 -->
   <a href="Maine.html" class="home-btn" aria-label="메인 화면">
     <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
+      width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" />
     </svg>
   </a>
@@ -37,12 +41,13 @@
 
   <!-- 우측 사이드바 -->
   <aside id="sidebar">
-    <!-- ★ 1) 다운로드를 먼저 -->
-    <h3>이미지 다운로드</h3>
-    <!-- ★ 제목은 원하는 대로 -->
-    <div id="dlBar" class="bar">
-      <!-- ★ 새 래퍼(zoomBar와 동일 구조) -->
+    <!-- ▽▽▽ 다운로드 영역: 요소는 남기되 완전 숨김/비활성화 ▽▽▽ -->
+    <h3 class="sr-only">이미지 다운로드 (MVP에서 비활성화)</h3>
+    <div id="dlBar" class="bar" aria-hidden="true">
+      <button class="btn" id="dlPNG" disabled aria-hidden="true" tabindex="-1">PNG</button>
+      <button class="btn" id="dlSVG" disabled aria-hidden="true" tabindex="-1">SVG</button>
     </div>
+    <!-- △△△ 다운로드 영역 끝 △△△ -->
 
     <!-- 픽셀 크기 -->
     <h3>픽셀 크기 조절 기능</h3>
@@ -191,7 +196,7 @@
       </button>
     </div>
 
-    <!-- 원본 + 다운로드 -->
+    <!-- 원본 + 업로드 (아이콘 경로 정리) -->
     <div id="origBox">
       <h3>원본 이미지</h3>
       <div id="uploadBox" class="upload-box">
@@ -199,7 +204,8 @@
 
         <!-- 교체 버튼 (초기에 숨겨 둠) -->
         <button id="imgReplace" class="replace-btn" title="이미지 교체">
-          <img src="../Pixel Partner Pro (4)/assets/icons/image-17.svg" alt="" class="ico">
+          <!-- 경로를 다른 아이콘들과 동일한 상대경로로 수정 -->
+          <img src="assets/icons/image-17.svg" alt="" class="ico">
         </button>
 
         <span class="place-txt">UPLOAD IMAGE</span>
@@ -209,23 +215,18 @@
   </aside>
 
   <div id="bgBar" class="bg-fab">
-    <!-- ★ 배경 전환 버튼 -->
+    <!-- 배경 전환 버튼 -->
     <button class="btn active" data-bg="#FFFFFF" aria-label="White background"></button>
-    <!-- 흰색 기본 선택 -->
     <button class="btn" data-bg="#000000" aria-label="Black background"></button>
-    <!-- 검정 -->
   </div>
 
-  <!-- ★ SVG 업로드 숨은 input -->
+  <!-- SVG 업로드 숨은 input -->
   <input type="file" id="svgUp" accept=".svg,image/svg+xml" style="display:none">
 
   <!-- 확대 / 축소 플로팅 버튼 -->
   <div id="zoomBar" class="zoom-fab">
-    <!-- ★ -->
     <button class="btn" data-zoom="in" aria-label="Zoom In">+</button>
-    <!-- ★ -->
     <button class="btn" data-zoom="out" aria-label="Zoom Out">−</button>
-    <!-- ★ -->
   </div>
 
   <!-- 고정 헤더 -->

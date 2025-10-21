@@ -1,0 +1,619 @@
+/* ───────── 상단 :root (네온 변수 + 반응형 사이드바) ───────── */
+:root {
+  --accent:        #007bff;
+  --accent-dark:   #0056b3;
+  --bg:            #000;
+  --fg:            #fff;
+  --neon:          #00e1ff;
+
+  /* 사이드바: 화면에 따라 자동 조절 (최소 320px, 기본 28%, 최대 520px) */
+  --sidebar-px:    clamp(320px, 28%, 520px);
+
+  /* 모드 버튼 지름 (기본값) */
+  --mode-btn-size: 100px;
+
+  /* ▼ 추가: 우측 패널/도구 간격 30% 축소용 스케일 */
+  --right-scale:   0.70;  /* 우측 패널 폭 70%로(=30% 축소) */
+  --tool-gap-scale:0.70;  /* 도구 간격 70%로(=30% 축소) */
+
+  /* ▼ 추가: 도킹 컬럼 */
+  --dock-width:    86px;  /* 세로 도킹 영역 너비 */
+  --dock-btn:      64px;  /* 도킹 내부 원형 버튼 지름 */
+  --dock-gap:      10px;  /* 도킹 버튼 간격 */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body{
+  height: 100vh;
+  padding-top: 56px;
+  display: flex;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* ▶ 커스텀 커서가 켜지면 문서 전체에서 OS 커서를 완전히 숨김 */
+.has-custom-cursor,
+.has-custom-cursor * { cursor: none !important; }
+
+/* 좌우 플렉스 컨테이너 */
+main#app{
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - 56px); /* 헤더 높이 제외 */
+  align-items: stretch;
+  gap: 0;
+}
+
+/* 상단 헤더 — 중앙 타이틀 고정(3열 그리드) */
+.site-header{
+  position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+  background: var(--bg); border-bottom: 1px solid #222; z-index: 1000;
+
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* 가운데에 타이틀 고정 */
+  align-items: center;
+}
+.site-title {
+  grid-column: 2;
+  font-size: 1.4rem; font-weight: 900;
+  justify-self: center; text-align: center;
+}
+.site-title, .site-title a { color: var(--fg); text-decoration: none; }
+
+/* 좌/우 칼럼 + (추가) 중앙 도킹 컬럼 */
+#left{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+#modeDock{
+  flex: 0 0 var(--dock-width);
+  width: var(--dock-width);
+  padding: 12px 8px;
+  border-left: 1px solid #222;
+  border-right: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dock-gap);
+  overflow-y: auto;
+  /* 헤더 아래에 딱 맞추기 */
+  max-height: calc(100vh - 56px);
+}
+#modeDock[hidden]{ display: none !important; }
+
+#right{
+  flex: 0 0 calc(var(--sidebar-px) * var(--right-scale));
+  width: calc(var(--sidebar-px) * var(--right-scale));
+  padding: 20px; border-left: 1px solid #444; overflow-y: auto;
+  box-sizing: border-box;
+  display: flex; flex-direction: column;
+}
+
+/* 캔버스 */
+canvas.main{
+  border: 1px solid #fff; background: #fff; image-rendering: pixelated;
+  display: none; /* 업로드 전 숨김 */
+  max-width: 100%;
+  height: auto;
+}
+
+label { display: block; margin-top: 15px; }
+input[type=range]{ width: 100%; }
+button{ margin-top: 10px; padding: 6px 12px; border: 0; }
+
+/* 버튼 공통 */
+.btn, .mode-btn{
+  background: #142AAB; color: #fff;
+  border: 2px solid transparent;
+  transition: background-color .3s, border-color .3s, color .3s;
+}
+.btn:hover{ background: #000; border-color: #fff; color: #fff; }
+.mode-btn:hover:not(.active){ background: #000; color: #fff; }
+.mode-btn.active{ background: #000; border-color: #fff; color: #fff; }
+
+/* 모드 버튼 기본(우측 패널 그리드 전용 — 이제 숨김 처리) */
+.mode-btn {
+  background: #1D1D1D;
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: var(--mode-btn-size);
+  height: var(--mode-btn-size);
+  display: flex; align-items: center; justify-content: center;
+  flex: none; padding: 0;
+  font-size: .75rem; line-height: 1;
+  transition: background-color .3s, border-color .3s, color .3s, box-shadow .3s;
+}
+.mode-toggle {
+  display: none !important; /* ← 카테고리/도킹으로 대체 */
+}
+
+/* 도킹(가운데 세로 원형 버튼 스택) */
+.mode-dock{ /* id=#modeDock에도 동일 적용 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--dock-gap);
+}
+.mode-dock .mode-btn,
+#modeDock .mode-btn{
+  width: var(--dock-btn);
+  height: var(--dock-btn);
+  border-radius: 50%;
+  background: #1D1D1D;
+  border: 1px solid transparent;
+  color: #fff;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.1;
+  text-align: center;
+  white-space: pre-line;     /* JS에서 \n 로 줄바꿈 */
+  word-break: keep-all;
+}
+#modeDock .mode-btn:hover:not(.active){
+  background: #000; color:#fff; border-color:#fff; border-width:2px;
+}
+#modeDock .mode-btn.active{
+  box-shadow:
+    0 0 0 1px  #fff,
+    0 0 6px  var(--neon),
+    0 0 12px var(--neon),
+    0 0 18px var(--neon);
+}
+
+/* 다운로드 버튼 */
+.btn-download{
+  width: 100%; padding: .4rem 1.2rem; font-size: 1rem;
+  background: #fff; color: #000; border: none; border-radius: 9px;
+  transition: background .3s; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  white-space: nowrap;
+}
+.btn-download:hover:not([disabled]){ background: #ddd; }
+
+/* 원본 미리보기 (완전 숨김) */
+#origWrap{ display: none !important; }
+#origImg{ display: none !important; }
+
+/* 플레이스홀더 */
+#placeholder{
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  color: #aaa; font-size: 1.2rem; pointer-events: none; user-select: none;
+}
+.uploaded canvas.main{ display: block; }
+.uploaded #placeholder{ display: none; }
+
+.upload-icon{
+  display: block; margin: 0 auto 120px; width: 90px; height: 90px; object-fit: contain;
+}
+.uploaded .upload-icon{ display: none; }
+
+/* 홈 버튼 */
+.home-btn{
+  position: fixed; top: 10px; left: 12px; z-index: 1101;
+  width: 40px; height: 40px;
+  background: #142AAB; border: 2px solid transparent; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; text-decoration: none;
+  transition: background-color .3s, border-color .3s;
+}
+.home-btn:hover{ background: #000; border-color: #fff; }
+
+/* 커스텀 커서(중앙 기준 보정 포함) */
+.cursor {
+  position: fixed;
+  width: 36px; height: 36px;
+  border: 2px solid #fff; border-radius: 50%;
+  background: #fff; mix-blend-mode: difference;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%); /* 중심정렬 보정 */
+}
+#trail-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none; z-index: 9998;
+}
+
+/* 업로드 영역: 해상도에 맞춰 자동 크기 조절 */
+#upload-area {
+  width: clamp(600px, 80%, 1500px);
+  height: clamp(400px, 70vh, 900px);
+  border: 2px dashed #fff;
+  display: flex; align-items: center; justify-content: center;
+  transition: background-color .3s;
+  position: relative; box-sizing: border-box;
+  max-width: 100%;
+  max-height: calc(100vh - 160px);
+}
+#upload-area:hover { background: rgba(255,255,255,0.1); }
+.uploaded #upload-area { display: none; }
+
+/* 우측 패널 file input: 시각적만 숨김 */
+#right input[type="file"] {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px; height: 1px; opacity: 0;
+}
+
+/* 업로드 오버레이(label.upload-overlay) */
+.upload-overlay{
+  position: absolute; inset: 0;
+  background: transparent;
+  z-index: 2;
+}
+#upload-area:focus-within,
+#upload-area:focus-visible {
+  outline: 2px dashed var(--neon);
+  outline-offset: 4px;
+}
+
+/* 포커스 스타일 */
+button:focus-visible,
+.mode-btn:focus-visible,
+.home-btn:focus-visible {
+  outline: 2px dashed var(--neon);
+  outline-offset: 3px;
+}
+
+/* 모드 기반 UI 토글 */
+.mode-color #thContainer,
+.mode-color #th { display: none !important; }
+.mode-ascii #glyphBox { display: block !important; }
+
+/* 컨트롤(라벨+숫자 한 줄) + 아래 슬라이더 중앙 배치 */
+.control-group{ margin-top: 12px; }
+.control-top{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 70%;
+  margin: 0 auto;
+  gap: 8px;
+}
+.control-label{ font-weight: 600; line-height: 1.2; }
+.control-value{
+  min-width: 3ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* 두 슬라이더 동일 폭 + 중앙 배치(기본) */
+#size, #th, #dotScale, #barMin, #barMax, #barGamma,
+#flowDensity, #flowLength, #flowStrength {
+  display: block;
+  width: 70%;
+  margin: 6px auto 0;
+  box-sizing: border-box;
+}
+
+/* 버튼/라벨 상하 여백 조정 */
+button{ margin-top: 7px; }
+label { margin-top: 10px; }
+
+/* 반응형 보강 */
+@media (max-width: 1600px){ :root { --mode-btn-size: 90px; } }
+@media (max-width: 1360px){ :root { --mode-btn-size: 84px; } }
+@media (max-width: 1180px){ :root { --mode-btn-size: 76px; } }
+@media (max-width: 1024px){
+  main#app { flex-direction: column; }
+  #modeDock{ order: 3; width: 100%; flex: 0 0 auto; border-right: none; border-left: none; border-top: 1px solid #222; border-bottom: 1px solid #222; max-height: none; }
+  #modeDock .mode-dock, #modeDock{ flex-direction: row; justify-content: center; gap: 12px; padding: 10px 12px; }
+  #right {
+    width: 100%;
+    flex: 0 0 auto;
+    border-left: none;
+    border-top: 1px solid #444;
+  }
+}
+
+/* FHD ~ 4K 튜닝 */
+@media (min-width: 1700px) and (max-width: 1920px) {
+  :root{ --sidebar-px: 455px; --mode-btn-size: 70px; }
+  .mode-btn{ font-size: 0.68rem; }
+  .btn-download{ font-size: 0.9rem; padding: .35rem 1rem; }
+  .site-title{ font-size: 1.2rem; }
+}
+@media (min-width: 2560px) and (max-width: 3839px) {
+  :root{ --sidebar-px: 748px; --mode-btn-size: 115px; }
+  .mode-btn{ font-size: 0.84rem; }
+  .btn-download{ font-size: 1.05rem; padding: .48rem 1.3rem; }
+  .site-title{ font-size: 1.5rem; }
+}
+@media (min-width: 3840px) {
+  :root{ --sidebar-px: 845px; --mode-btn-size: 130px; }
+  .mode-btn{ font-size: 0.9rem; }
+  .btn-download{ font-size: 1.1rem; padding: .5rem 1.4rem; }
+  .site-title{ font-size: 1.6rem; }
+}
+
+/* 다운로드 영역 레이아웃 */
+#downloadWrap {
+  width: 70%;
+  margin: 16px auto 0;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  column-gap: 14px;
+  row-gap: 0;
+}
+#downloadWrap .btn-download{
+  width: auto !important;
+  flex: 0 0 auto;
+  min-width: 140px;
+  padding: 10px 16px;
+  margin-top: 0 !important;
+  white-space: nowrap;
+  text-align: center;
+}
+#downloadWrap .btn-download + .btn-download{ margin-left: 14px; }
+@media (max-width: 560px){
+  #downloadWrap { flex-wrap: wrap; justify-content: center; }
+  #downloadWrap .btn-download{ flex: 1 1 100%; margin-left: 0; }
+}
+
+/* 슬라이더 디자인 공통 */
+#size, #th, #dotScale, #barMin, #barMax, #barGamma,
+#flowDensity, #flowLength, #flowStrength {
+  --track-h: 5px;
+  --track-border: 1px solid rgba(255,255,255,.7);
+  --radius: 999px;
+  --fill: #fff;
+  --rest: transparent;
+  --val: 0%;
+  --thumb: 13px;
+  --thumb-ring: calc(var(--thumb) * 0.35);
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+}
+
+/* WebKit 트랙 */
+#size::-webkit-slider-runnable-track,
+#th::-webkit-slider-runnable-track,
+#dotScale::-webkit-slider-runnable-track,
+#barMin::-webkit-slider-runnable-track,
+#barMax::-webkit-slider-runnable-track,
+#barGamma::-webkit-slider-runnable-track,
+#flowDensity::-webkit-slider-runnable-track,
+#flowLength::-webkit-slider-runnable-track,
+#flowStrength::-webkit-slider-runnable-track {
+  height: var(--track-h);
+  border: var(--track-border);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(to right, var(--fill) 0, var(--fill) var(--val)) no-repeat,
+    linear-gradient(to right, var(--rest) 0, var(--rest) 100%) no-repeat;
+  background-size: var(--val) 100%, 100% 100%;
+  background-position: left center, left center;
+  /* ▶ 커서 숨기기(전역 규칙 보조) */
+  cursor: none;
+}
+
+/* WebKit 썸 */
+#size::-webkit-slider-thumb,
+#th::-webkit-slider-thumb,
+#dotScale::-webkit-slider-thumb,
+#barMin::-webkit-slider-thumb,
+#barMax::-webkit-slider-thumb,
+#barGamma::-webkit-slider-thumb,
+#flowDensity::-webkit-slider-thumb,
+#flowLength::-webkit-slider-thumb,
+#flowStrength::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  margin-top: calc((var(--track-h) - var(--thumb)) / 2);
+  box-shadow: 0 0 0 var(--thumb-ring) rgba(255,255,255,.25);
+  cursor: none;
+}
+
+/* Firefox 트랙/프로그레스 */
+#size::-moz-range-track,
+#th::-moz-range-track,
+#dotScale::-moz-range-track,
+#barMin::-moz-range-track,
+#barMax::-moz-range-track,
+#barGamma::-moz-range-track,
+#flowDensity::-moz-range-track,
+#flowLength::-moz-range-track,
+#flowStrength::-moz-range-track {
+  height: var(--track-h);
+  border: var(--track-border);
+  border-radius: var(--radius);
+  background: var(--rest);
+  cursor: none;
+}
+#size::-moz-range-progress,
+#th::-moz-range-progress,
+#dotScale::-moz-range-progress,
+#barMin::-moz-range-progress,
+#barMax::-moz-range-progress,
+#barGamma::-moz-range-progress,
+#flowDensity::-moz-range-progress,
+#flowLength::-moz-range-progress,
+#flowStrength::-moz-range-progress {
+  height: var(--track-h);
+  border-radius: var(--radius);
+  background: var(--fill);
+  cursor: none;
+}
+
+/* Firefox 썸 */
+#size::-moz-range-thumb,
+#th::-moz-range-thumb,
+#dotScale::-moz-range-thumb,
+#barMin::-moz-range-thumb,
+#barMax::-moz-range-thumb,
+#barGamma::-moz-range-thumb,
+#flowDensity::-moz-range-thumb,
+#flowLength::-moz-range-thumb,
+#flowStrength::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 0 0 var(--thumb-ring) rgba(255,255,255,.25);
+  cursor: none;
+}
+
+/* 레거시 MS 계열 대응 */
+#size::-ms-track, #th::-ms-track, #dotScale::-ms-track,
+#barMin::-ms-track, #barMax::-ms-track, #barGamma::-ms-track,
+#flowDensity::-ms-track, #flowLength::-ms-track, #flowStrength::-ms-track {
+  height: var(--track-h);
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+  cursor: none;
+}
+#size::-ms-fill-lower, #th::-ms-fill-lower, #dotScale::-ms-fill-lower,
+#barMin::-ms-fill-lower, #barMax::-ms-fill-lower, #barGamma::-ms-fill-lower,
+#flowDensity::-ms-fill-lower, #flowLength::-ms-fill-lower, #flowStrength::-ms-fill-lower {
+  height: var(--track-h);
+  background: var(--fill);
+  border-radius: var(--radius);
+  cursor: none;
+}
+#size::-ms-fill-upper, #th::-ms-fill-upper, #dotScale::-ms-fill-upper,
+#barMin::-ms-fill-upper, #barMax::-ms-fill-upper, #barGamma::-ms-fill-upper,
+#flowDensity::-ms-fill-upper, #flowLength::-ms-fill-upper, #flowStrength::-ms-fill-upper {
+  height: var(--track-h);
+  background: var(--rest);
+  border: var(--track-border);
+  border-radius: var(--radius);
+  cursor: none;
+}
+#size::-ms-thumb, #th::-ms-thumb, #dotScale::-ms-thumb,
+#barMin::-ms-thumb, #barMax::-ms-thumb, #barGamma::-ms-thumb,
+#flowDensity::-ms-thumb, #flowLength::-ms-thumb, #flowStrength::-ms-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 0 0 var(--thumb-ring) rgba(255,255,255,.25);
+  cursor: none;
+}
+
+/* ★ 추가: 업로드 후 캔버스/프리뷰 위에 “클릭해서 이미지 교체” 힌트 & 클릭 가능 표시 */
+.click-to-replace{
+  position: relative;               /* ::after 배지 위치 기준 */
+  outline: none;                    /* 기본 아웃라인 제거 (접근성은 :focus-visible로) */
+}
+.has-custom-cursor .click-to-replace{ cursor: none; } /* 커스텀 커서 사용 시 일관성 유지 */
+
+/* 힌트 배지 (업로드 된 뒤에만 등장) */
+.uploaded .click-to-replace::after{
+  content: "클릭해서 이미지 교체";
+  position: absolute;
+  right: 8px; bottom: 8px;
+  padding: 6px 10px;
+  font-size: 12px; line-height: 1;
+  color: #fff;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 8px;
+  pointer-events: none;             /* 클릭 방해 금지 */
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .22s ease, transform .22s ease;
+  backdrop-filter: blur(2px);
+}
+
+/* 호버/포커스 시 힌트 표시 */
+.uploaded .click-to-replace:hover::after,
+.uploaded .click-to-replace:focus-visible::after{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* (선택) 가벼운 반짝임 애니메이션으로 주목도 강화 */
+@keyframes pulseHint {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,225,255,0.0); }
+  50%      { box-shadow: 0 0 0 5px rgba(0,225,255,0.12); }
+}
+.uploaded .click-to-replace:focus-visible{
+  animation: pulseHint 1.4s ease-out 1;
+}
+
+/* (접근성) 포커스 링은 기존 규칙 재사용 */
+.click-to-replace:focus-visible{
+  outline: 2px dashed var(--neon);
+  outline-offset: 3px;
+}
+
+/* ───────────── 수정: 카테고리 바 (우측 패널 상단, 5층 세로 스택) ───────────── */
+#categoryBar,
+.category-bar{
+  display: grid;
+  grid-template-columns: 1fr;                    /* 한 열로 고정 (각 버튼이 한 줄 전체 차지) */
+  grid-auto-rows: minmax(48px, auto);            /* 최소 높이 48px */
+  gap: calc(10px * var(--tool-gap-scale));
+  margin: 12px 0 16px;
+}
+.cat-btn{
+  appearance: none;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  color: #fff;
+  padding: 12px 14px;                            /* 좀 더 높이감 */
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1rem;
+  text-align: center;
+  width: 100%;
+  transition: background .2s, border-color .2s, box-shadow .2s, color .2s, transform .06s;
+}
+.cat-btn:hover{ background: #000; border-color: #fff; }
+.cat-btn:active{ transform: translateY(1px); }
+.cat-btn[aria-selected="true"]{
+  background: #000;
+  border-color: #fff;
+  box-shadow:
+    0 0 0 1px  #fff,
+    0 0 8px   var(--neon),
+    0 0 12px  var(--neon);
+}
+.cat-btn:focus-visible{
+  outline: 2px dashed var(--neon);
+  outline-offset: 3px;
+}
+
+/* 좁은 폭에서도 1열 유지(명시) */
+@media (max-width: 1280px){
+  #categoryBar, .category-bar{ grid-template-columns: 1fr; }
+}
+@media (max-width: 720px){
+  #categoryBar, .category-bar{ grid-template-columns: 1fr; }
+}
+
+/* ── 세분화(#size), 임계값(#th) 슬라이더만 100%로 확장 ── */
+.control-group:has(#size) .control-top,
+.control-group:has(#th) .control-top {
+  width: 100%;
+  margin: 0;
+}
+#size, #th { width: 100%; margin: 6px 0 0; }
+
+/* ── [확장] 기능 전용 슬라이더 가로폭 100% 오버라이드 ── */
+#dotScaleWrap .control-top,
+#barCtrl .control-top,
+#flowCtrl .control-top { width: 100%; margin: 0; }
+
+#dotScale,
+#barMin, #barMax,
+#flowDensity, #flowLength, #flowStrength { width: 100%; margin: 6px 0 0; }
+
+/* (선택) 타이포 입력창도 카테고리 폭과 맞추고 싶다면 */
+#glyphBox input { width: 100%; }

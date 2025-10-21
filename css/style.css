@@ -1,0 +1,114 @@
+/* 1. 커스텀 폰트 정의 */
+@font-face {
+  font-family: 'DungGeunMo';
+  src: url('../assets/fonts/DungGeunMo.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 2. 기본 리셋 및 페이지 설정 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+  background-color: #000;
+  font-family: Arial, sans-serif;
+  cursor: none;                 /* 브라우저 기본 커서 숨기기 */
+}
+
+/* 2‑1. 스티키 푸터를 위한 플렉스 레이아웃 */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. 레이아웃 컨테이너 */
+.container {
+  flex: 1 0 auto;               /* 본문이 가능한 공간을 차지 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+/* 4. 타이틀 스타일 & 애니메이션 */
+.title {
+  color: #fff;
+  font-family: 'DungGeunMo', sans-serif;
+  font-size: 6vw;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  animation: wave 3s ease-in-out infinite;
+}
+@keyframes wave {
+  0%, 100% { transform: translateY(0); }
+  25%      { transform: translateY(-10px); }
+  50%      { transform: translateY(0); }
+  75%      { transform: translateY(10px); }
+}
+
+/* 5. 버튼 스타일 */
+.buttons {
+  display: flex;
+  gap: 1rem;
+}
+.btn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  background-color: #142AAB;
+  color: #fff;
+  border: none;
+  border-radius: 15px;
+  transition: background-color 0.3s, border 0.3s, color 0.3s;
+}
+.btn:hover {
+  background-color: #000;
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+/* 6. 커서 대체 요소 (36×36 링 + 반전 모드) */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background-color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* 7. 모든 요소에서도 브라우저 커서 숨김 */
+button, .btn, a, input, textarea {
+  cursor: none !important;
+}
+
+/* 8. Canvas Trail: full‑screen canvas for elastic tail */
+#trail-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* 9. 사이트 푸터 */
+.site-footer {
+  flex-shrink: 0;               /* 높이 고정 */
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 0.85rem;
+  color: #777;
+  background: #000;             /* 배경색 유지 */
+}

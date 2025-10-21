@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PixelPartner-Pro</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/design.css" />
+</head>
+<body>
+
+  <noscript>
+    이 사이트는 JavaScript가 필요합니다. 브라우저 설정에서 JavaScript를 활성화해주세요.
+  </noscript>
+
+  <!-- ── 좌측 상단 홈 버튼 ── -->
+  <a href="Maine.html" class="home-btn" aria-label="메인 화면">…</a>
+
+  <!-- ── 상단 헤더 ── -->
+  <header class="site-header" role="banner">
+    …
+  </header>
+
+  <main id="app" role="main" aria-live="polite" aria-busy="false">
+    <!-- ── 좌측 작업 영역 ── -->
+    <div id="left">
+      <!-- 업로드 영역 -->
+      <div id="upload-area" role="button" tabindex="0" aria-controls="upload" aria-label="이미지 업로드">
+        <div class="upload-content">
+          <img src="assets/images/1001.png" alt="업로드 안내 아이콘" class="upload-icon" width="90" height="90" />
+          <div id="placeholder">이미지를 업로드 해주세요</div>
+          <label for="upload" class="upload-overlay" aria-hidden="true"></label>
+        </div>
+
+        <!-- 자르기/위치 조정용 미리보기 (현재 미사용) -->
+        <img id="cropper-image" src="" alt="업로드된 이미지 미리보기" style="max-width:100%; display:none;" />
+        <button id="crop-confirm" type="button" style="display:none;">이미지 위치/크기 적용</button>
+      </div>
+
+      <!-- 실제 변환 캔버스 -->
+      <canvas id="canvas" class="main click-to-replace" aria-label="변환 결과 캔버스"></canvas>
+    </div>
+
+    <!-- ── 가운데 세로 도킹: 카테고리 선택 시 기능(모드) 원형 버튼 스택 표시 ── -->
+    <div id="modeDock" class="mode-dock" hidden aria-label="기능 선택 도킹 영역" role="group"></div>
+
+    <!-- ── 우측 컨트롤 영역 ── -->
+    <aside id="right" aria-label="변환 설정">
+      <h2 class="panel-title" style="text-align:center;">이미지 변환</h2>
+      <p id="hint" style="text-align:center;">이미지를 업로드하면 즉시 변환됩니다.</p>
+
+      <!-- 숨겨진 file input (label/영역으로 트리거) -->
+      <input type="file" id="upload" accept="image/*" style="position:absolute; left:-9999px;" />
+
+      <!-- ① 슬라이더/컨트롤: 맨 위 -->
+      <!-- ▽ 세분화 단계 -->
+      <div class="control-group" role="group" aria-labelledby="label-size">
+        <div class="control-top">
+          <label id="label-size" for="size" class="control-label">세분화 단계</label>
+          <span id="sizeVal" class="control-value">1</span>
+        </div>
+        <input type="range" id="size" min="1" max="50" value="1" />
+      </div>
+
+      <!-- ▽ 임계값 단계 -->
+      <div class="control-group" role="group" aria-labelledby="label-th">
+        <div class="control-top">
+          <label id="label-th" for="th" class="control-label">임계값 단계(1-50)</label>
+          <span id="thDisp" class="control-value">50</span>
+        </div>
+        <input type="range" id="th" min="1" max="50" value="50" />
+      </div>
+
+      <!-- ▽ 도트PRO/나선: 도트 크기 (%) -->
+      <div class="control-group" id="dotScaleWrap" role="group" aria-labelledby="label-dotScale" style="display:none;">
+        <div class="control-top">
+          <label id="label-dotScale" for="dotScale" class="control-label">도트 크기 (%)</label>
+          <span id="dotScaleVal" class="control-value">100</span>
+        </div>
+        <input type="range" id="dotScale" min="50" max="200" value="100" step="1" />
+      </div>
+
+      <!-- ▽ 바 모드 두께 범위 -->
+      <div id="barCtrl" class="control-group" style="display:none;">
+        <div class="control-top">
+          <span class="control-label">세로바 최소 두께(%)</span>
+          <span id="barMinVal" class="control-value">10</span>
+        </div>
+        <input id="barMin" type="range" min="0" max="100" step="1" value="10" />
+
+        <div class="control-top" style="margin-top:10px;">
+          <span class="control-label">세로바 최대 두께(%)</span>
+          <span id="barMaxVal" class="control-value">98</span>
+        </div>
+        <input id="barMax" type="range" min="10" max="100" step="1" value="98" />
+      </div>
+
+      <!-- ▽ Flow Field 전용 컨트롤 -->
+      <div id="flowCtrl" class="control-group" style="display:none;">
+        <div class="control-top">
+          <span class="control-label">밀도</span>
+          <span id="flowDensityVal" class="control-value">10</span>
+        </div>
+        <input id="flowDensity" type="range" min="1" max="50" step="1" value="10" />
+
+        <div class="control-top" style="margin-top:10px;">
+          <span class="control-label">길이</span>
+          <span id="flowLengthVal" class="control-value">20</span>
+        </div>
+        <input id="flowLength" type="range" min="5" max="100" step="1" value="20" />
+
+        <div class="control-top" style="margin-top:10px;">
+          <span class="control-label">감도</span>
+          <span id="flowStrengthVal" class="control-value">1.0</span>
+        </div>
+        <input id="flowStrength" type="range" min="0.2" max="3.0" step="0.1" value="1.0" />
+      </div>
+
+      <!-- ▽ ASCII 모드 전용 문자셋 -->
+      <label id="glyphBox" style="display:none; margin-top:15px">
+        타이포 문자집합 (입력순·최대 50자):
+        <input type="text" id="glyphSet" value="PixelPartnerPro" maxlength="50" style="width:100%; margin-top:6px; padding:4px" />
+      </label>
+
+      <!-- ② 카테고리 바: 슬라이더 아래, 다운로드 위 -->
+      <div id="categoryBar" class="category-bar" role="tablist" aria-label="카테고리 선택">
+        <!-- 버튼 라벨/순서: 픽셀 · 도트 · 해치 · 플로우필드 · 타이포 -->
+        <button class="cat-btn" type="button" data-cat="pixel"      role="tab" aria-selected="false">픽셀</button>
+        <button class="cat-btn" type="button" data-cat="dot"        role="tab" aria-selected="false">도트</button>
+        <button class="cat-btn" type="button" data-cat="hatch"      role="tab" aria-selected="false">해치</button>
+        <button class="cat-btn" type="button" data-cat="flowfield"  role="tab" aria-selected="false">플로우필드</button>
+        <button class="cat-btn" type="button" data-cat="type"       role="tab" aria-selected="false">타이포</button>
+      </div>
+
+      <!-- ▽ (백업) 모드 선택: 기존 UI (CSS로 숨김 처리됨) -->
+      <div class="mode-toggle" id="modeBar" role="tablist" aria-label="렌더링 모드 선택" hidden aria-hidden="true">
+        <button class="mode-btn active" data-mode="bw"          role="tab" aria-selected="true">픽셀·흑백</button>
+        <button class="mode-btn"        data-mode="color"       role="tab" aria-selected="false">픽셀·컬러</button>
+        <button class="mode-btn"        data-mode="barVert"     role="tab" aria-selected="false">세로바</button>
+        <button class="mode-btn"        data-mode="barHori"     role="tab" aria-selected="false">가로바</button>
+        <button class="mode-btn"        data-mode="dot"         role="tab" aria-selected="false">도트·점묘화</button>
+        <button class="mode-btn"        data-mode="grunge"      role="tab" aria-selected="false">도트·그런지</button>
+        <button class="mode-btn"        data-mode="dotPro"      role="tab" aria-selected="false">도트PRO</button>
+        <button class="mode-btn"        data-mode="dotProColor" role="tab" aria-selected="false">도트PRO·컬러</button>
+        <button class="mode-btn"        data-mode="hatchSlash"  role="tab" aria-selected="false">해치(／)</button>
+        <button class="mode-btn"        data-mode="hatchBack"   role="tab" aria-selected="false">해치(＼)</button>
+        <button class="mode-btn"        data-mode="hatchHori"   role="tab" aria-selected="false">해치(ㅡ)</button>
+        <button class="mode-btn"        data-mode="hatchVert"   role="tab" aria-selected="false">해치(ㅣ)</button>
+        <button class="mode-btn"        data-mode="crossStitch" role="tab" aria-selected="false">해치( X )</button>
+        <button class="mode-btn"        data-mode="hatchPlus"   role="tab" aria-selected="false" aria-label="해치 플러스">해치(+)</button>
+        <button class="mode-btn"        data-mode="stipple"     role="tab" aria-selected="false">스티플링</button>
+        <button class="mode-btn"        data-mode="ascii"       role="tab" aria-selected="false">ASCII 타이포</button>
+        <button class="mode-btn"        data-mode="flowField"   role="tab" aria-selected="false">Flow Field</button>
+        <button class="mode-btn"        data-mode="halftoneSpiral" role="tab" aria-selected="false">하프톤 나선</button>
+        <button class="mode-btn"        data-mode="halftoneSpiralColor" role="tab" aria-selected="false">하프톤 나선·컬러</button>
+      </div>
+
+      <!-- (원본 미리보기는 CSS에서 숨김 처리됨) -->
+      <div id="origWrap" style="display:none">
+        <h3 style="margin:14px 0 6px">원본 미리보기</h3>
+        <img id="origImg" alt="original preview" />
+      </div>
+    </aside>
+  </main>
+
+  <!-- JavaScript -->
+  <script src="js/design.js" defer></script>
+</body>
+</html>

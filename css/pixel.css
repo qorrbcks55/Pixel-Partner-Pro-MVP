@@ -1,0 +1,600 @@
+/* ==============================================================
+   Pixel Playground — Fixed Sidebar 960 px (2025-07-13)
+   ============================================================== */
+:root{
+  --bg:#000;
+  --fg:#fff;
+  --accent:#007bff;
+  --accent-dark:#0056b3;
+
+  /* 4 K 화면의 25 % ≈ 960 px */
+  --sidebar-px:650px;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+/* ── 레이아웃(Grid) ------------------------------------------- */
+body{
+  height:100vh;
+  display:grid;
+  grid-template-columns:1fr var(--sidebar-px);  /* 보드 | 사이드바 */
+  background:var(--bg);
+  color:var(--fg);
+  padding-top:56px;     /* 고정 헤더 높이 */
+  overflow:hidden;      /* 바깥쪽 스크롤 차단 */
+}
+
+/* ── 픽셀 보드 -------------------------------------------------- */
+#boardWrap{
+  overflow:auto;
+  background:#000;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+#zoomContainer{ position:relative; }
+
+/* ── 우측 사이드바 -------------------------------------------- */
+#sidebar{
+  flex:0 0 var(--sidebar-px);
+  width:var(--sidebar-px);
+  border-left:3px solid #333;
+  padding:18px 16px;
+  overflow-y:auto;
+  font-size:.85rem;
+}
+
+/* ---------------★ 헤드라인을 흰색으로 ★----------------------- */
+#sidebar h3{
+  /* 위치·여백 */
+  margin:24px auto 8px;   /* ★ 상단 24px, 아래 8px, 좌우 auto ⇒ 중앙정렬 */
+  width:610px;            /* ★ 정확히 630 px */
+
+  /* 글꼴·정렬 */
+  font-size:1rem;
+  text-align:center;      /* ★ 텍스트 중앙 */
+  color:#fff;
+
+  /* 테두리 & 라운드 */
+  border:2px solid #fff;  /* ★ 흰색 테두리 */
+  border-radius:10px;     /* ★ 라운드 모서리 (값은 취향대로) */
+
+  /* 내부 여백 */
+  padding:6px 0;          /* 위·아래 6px, 좌·우 0 */
+
+  box-sizing:border-box;  /* 테두리 포함해 630 px 유지 */
+  background:rgba(255,255,255,0.12);
+}
+
+/* ── 픽셀 보드 ------------------------------------------------ */
+canvas.board{
+  image-rendering:pixelated;
+  border:1px solid #666;
+  cursor:inherit !important;   /* ★ 전역 커서 상속 */
+}
+
+/* ── 픽셀 크기 입력 ------------------------------------------- */
+.ctrl-row{ display:flex; gap:10px; }
+.ctrl-row label{ flex:1; display:flex; flex-direction:column; }
+.ctrl-row input{
+  margin-top:3px;
+  padding:4px;
+  background:#222;
+  border:1px solid #555;
+  color:#fff;
+  border-radius:4px;
+  text-align:center;
+}
+
+/* ── 색상 피커 ------------------------------------------------- */
+#pickerArea{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:flex-start;
+  gap:12px;
+}
+#wheelCanvas{
+  flex:0 0 320px;       /* 휠 고정 320 px */
+  max-width:320px;
+  aspect-ratio:1;
+  border:1px solid #555;
+  background:#000;
+  cursor:crosshair;
+}
+#previewCol{
+  flex:0 0 260px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.prevBox{
+  width:42px;
+  height:26px;
+  border:2px solid #fff;
+  border-radius:4px;
+}
+
+/* HSV / RGB / CMYK 스택 */
+#valueStack{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  font-size:.75rem;
+}
+
+.valRow{ display:grid; gap:8px; }
+.valRow.cols4{ grid-template-columns:repeat(4,1fr); }
+.valRow.cols3{
+  gap:12px;
+  grid-template-columns:repeat(3,82px);
+}
+.valRow.cols3 input{ max-width:none; }
+
+.valRow label{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
+}
+.valRow input{
+  margin-top:2px;
+  padding:2px;
+  background:#222;
+  border:1px solid #555;
+  color:#fff;
+  border-radius:3px;
+  text-align:center;
+  font-size:.75rem;
+  width:100%;
+  max-width:58px;
+}
+.valRow input[type="number"]{
+  text-align:center;         /* 이미 넣으셨던 줄 */
+  -moz-appearance:textfield; /* ★ Firefox – 스핀 제거 */
+}
+
+.valRow input[type="number"]::-webkit-inner-spin-button,
+.valRow input[type="number"]::-webkit-outer-spin-button{
+  -webkit-appearance:none;   /* ★ Chrome / Edge / Safari – 스핀 제거 */
+  margin:0;                  /* 버튼 영역 여백도 제거 */
+}
+
+/* HEX + 미리보기 한 줄 */
+.prevRow{ display:flex; align-items:center; gap:8px; }
+#hexBox{ display:flex; align-items:center; gap:6px; margin-top:0; }
+#hexVal{
+  width:186px;
+  padding:2px;
+  background:#222;
+  border:1px solid #555;
+  color:#fff;
+  border-radius:4px;
+  text-align:center;
+  font-size:.8rem;
+}
+
+/* ── 버튼 공통 스타일 ----------------------------------------- */
+.bar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+.btn{
+  padding:.8rem 1.5rem;
+  font-size:.8rem;
+  background:#1D1D1D;
+  olor:#fff;
+  border:2px solid transparent;
+  border-radius:10px;
+  cursor:pointer;
+  user-select:none;
+  transition:background-color .3s, border-color .3s, color .3s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+#toolBar .btn,
+#symBar .btn,
+#zoomBar .btn{ min-width:0; }
+.btn:hover:not(.active){ background:#000; color:#fff; border-color:#fff; }
+.btn.active{ background:#000; color:#fff; border-color:#fff; }
+.btn span{ font-size:1.05rem; }
+#zoomBar .btn{ flex:1 1 0; padding:.8rem 0; }
+#toolBar .btn:nth-child(-n+3){ flex:1 1 calc((100% - 20px)/3); }
+#toolBar .btn:nth-child(n+4){  flex:1 1 calc((100% - 10px)/2); }
+
+/* ── 기본 팔레트 ---------------------------------------------- */
+.swatchGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:13px 5px;
+  margin-top:8px;
+}
+.swatch{
+  justify-self:center;
+  width:60%;
+  padding-top:60%;
+  border:1px solid #555;
+  border-radius:50%;
+  cursor:pointer;
+}
+.swatch:hover{ box-shadow:0 0 0 2px var(--accent); }
+
+/* ── 원본·다운로드 -------------------------------------------- */
+#origBox{ margin-top:10px; }
+#origCtrl{ display:flex; align-items:center; gap:6px; }
+#origCtrl input[type=file]{ flex:1; }
+.dlBtn{
+  width:100%;
+  padding:.8rem 1.5rem;
+  font-size:.8rem;
+  background:#FFFFFF
+  olor:#fff;
+  border:2px solid transparent;
+  border-radius:10px;
+  cursor:pointer;
+  transition:background-color .3s, border-color .3s, color .3s;
+}
+.dlBtn:hover:not([disabled]){ background:#000; border-color:#fff; color:#fff; }
+#origImg{
+  max-width:100%;
+  border:1px solid #555;
+  border-radius:4px;
+  display:none;
+}
+
+/* ── 헤더 & 홈 버튼 ------------------------------------------- */
+.site-header{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:56px;
+  background:var(--bg);
+  border-bottom:3px solid #333;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1100;
+}
+.site-title{
+  font-size:1.4rem;
+  font-weight:900;
+  color:var(--fg);
+  margin:0;
+}
+.site-title a{ color:inherit; text-decoration:none; }
+.home-btn{
+  position:fixed;
+  top:10px;
+  left:12px;
+  z-index:1101;
+  width:40px;
+  height:40px;
+  background:#FFFFFF;
+  border:2px solid transparent;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#171717;
+  text-decoration:none;
+  transition:background-color .3s, border-color .3s;
+}
+.home-btn:hover{ background:#000; border-color:#fff; }
+
+/* 툴바를 Grid 5열로 - gap 12px */
+#toolBar{
+  display:grid !important;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px;
+  padding:0;  /* (선택) 위·아래 여백 필요 없으면 */
+}
+
+/* 원형 버튼 – 셀을 가득 채워 정사각, border 포함 */
+#toolBar .btn{
+  width:100% !important;   /* Grid 셀 전체 */
+  aspect-ratio:1/1;        /* 높이 = 너비 (Chrome 79+/ FF 71+) */
+  border-radius:50%;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;                /* Flex 규칙 무효화 */
+  line-height:0;
+  font-size:0;
+  box-sizing:border-box;    /* 2px 테두리 포함해서 정사각 */
+}
+
+/* 아이콘 크기 – 버튼 너비의 40 % 정도 (= 약 45 px) */
+#toolBar .btn .ico{
+  width:60%;
+  height:60%;
+  display:block;
+}
+
+/* 1) 대칭 버튼 컨테이너 : 6열 Grid  */
+#symBar{
+  display:grid !important;
+  grid-template-columns:repeat(6,1fr);   /* 패널 650 px 을 6등분 */
+  gap:8px;
+  padding:0;
+  flex-wrap:nowrap;                      /* 무시하려고 해도 flex 특성 제거용 */
+}
+
+/* 2) 버튼 기본형 : 원형·테두리 없음·정사각(1:1) */
+#symBar .btn{
+  width:100% !important;                 /* 각 Grid 셀 전폭 */
+  aspect-ratio:1/1;                      /* 정사각 */
+  border-radius:50%;
+  padding:0;
+  border:none;                           /* 테두리 완전 제거 */
+  background:#1D1D1D;                    /* 기본색 */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:0;
+  font-size:0;
+  transition:background-color .3s;
+}
+#symBar .btn:hover,
+#symBar .btn.active{
+  background:#000;                       /* 테두리 없이 색상만 변경 */
+}
+
+/* 3) 아이콘 크기 : 버튼 내부를 최대한 채움 */
+#symBar .btn .ico{
+  width:90%;                             /* 꽉 차도록 */
+  height:90%;
+  display:block;
+}
+
+/* ===== 맞춤 커서 클래스 ===================================== */
+.cursor-brush  { cursor:url("../assets/cursor/brush.cur")         0  31, crosshair; }
+.cursor-bucket { cursor:url("../assets/cursor/paint.cur")         0  31, crosshair; }
+.cursor-pick   { cursor:url("../assets/cursor/eyedropper.cur")    0  31, crosshair; }
+.cursor-eraser { cursor:url("../assets/cursor/eraser.cur")        0  31, crosshair; }
+/* clear 버튼은 브러시와 동일 커서(디폴트) — 필요하면 별도 정의 */
+/* 버튼·툴바·사이드바 요소들이 전역 커서를 그대로 따르도록 */
+.btn,
+.bar .btn,
+#zoomBar .btn,
+input,
+label{
+  cursor:inherit !important;  /* 포인터 대신 상속 */
+}
+
+/* ★ 1) 네온 색 변수 – 원하는 색으로 바꾸세요 */
+:root{
+  --neon:#00e1ff;   /* 시안-블루 네온 */
+}
+
+/* ★ 2) 공통 active 스타일에 네온 글로우 추가 */
+.btn.active{
+  background:#000;
+  color:#fff;
+  border-color:#fff;                     /* 기존 흰 테두리 */
+  box-shadow:
+    0 0 6px   var(--neon),               /* 내부 퍼짐 */
+    0 0 12px  var(--neon),               /* 바깥 약한 글로우 */
+    0 0 18px  var(--neon);               /* 더 멀리 번짐 */
+}
+
+/* ★ 3) 대칭툴(#symBar)처럼 border 없앤 버튼은
+       대신 가짜 테두리 + 네온을 box-shadow로 표현 */
+#symBar .btn.active{
+  background:#000;
+  box-shadow:
+    0 0 0 2px #fff,        /* 흰색 링(테두리) */
+    0 0 6px   var(--neon),
+    0 0 12px  var(--neon),
+    0 0 18px  var(--neon);
+}
+
+/* ★ dlBar : zoomBar 와 동일한 Flex Row */
+#dlBar{
+  display:flex;
+  gap:10px;
+  margin-top:6px;
+}
+
+/* ★ dlBar 안의 버튼 – zoomBar 버튼과 똑같이 */
+#dlBar .btn{
+  flex:1 1 0;             /* 2개가 균등 분할 */
+  padding:.8rem 0;        /* 세로 두께 동일 */
+  background:#1D1D1D;
+  olor:#fff;              /* 기존 색 */
+  color:#fff;
+  border:2px solid transparent;
+  border-radius:10px;
+  cursor:inherit !important;
+  transition:background .3s;
+}
+#dlBar .btn:hover{ background:#000; border-color:#fff; }
+
+/* ── 업로드 박스 ------------------------------------------------- */
+.upload-box{                        /* ★ 박스 자체 */
+  width:610px;
+  height:500px;
+  margin:0 auto;                    /* 가운데 정렬 */
+  border:2px solid #fff;
+  border-radius:10px;
+  background:rgba(255,255,255,0.08);/* 흰색 반투명 */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  cursor:pointer;                   /* 손가락 커서 */
+  box-sizing:border-box;
+  cursor:pointer;
+}
+.upload-box:hover{ background:rgba(255,255,255,0.12); } /* 살짝 밝아짐 */
+.upload-box.has-img{ cursor:default; }
+
+/* 안내 문구 */
+.place-txt{                         /* ★ 가운데 텍스트 */
+  font:0.9rem/1 'Segoe UI',sans-serif;
+  letter-spacing:1px;
+  color:#fff;
+  opacity:0.8;
+  user-select:none;
+  pointer-events:none;
+}
+
+/* 업로드된 이미지의 배치 */
+#origImg{
+  max-width:100%;
+  max-height:100%;
+  position:absolute;                /* 박스 꽉 채우기 */
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  margin:auto;
+  display:none;                     /* 초기엔 숨김 */
+  object-fit:contain;               /* 비율 유지 */
+}
+
+#sidebar{ overflow-x:hidden; }
+
+/* 업로드 박스 안의 교체 버튼 ----------------------------------- */
+.replace-btn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:50px;
+  height:50px;          /* ★ 35 × 35 */
+  border:none;          /* ★ 테두리 제거 */
+  border-radius:50%;    /* ★ 완전 원형 */
+  background:#FFFFFF;   /* ★ 검정색 원형 */
+  display:none;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:opacity .25s;
+  z-index:10;
+}
+.upload-box.has-img .replace-btn{ display:flex; }
+.replace-btn:hover{ opacity:.75; }    /* 살짝 어둡게 */
+
+/* 아이콘 크기 */
+.replace-btn .ico{
+  width:80%;
+  height:80%;            /* 버튼 지름의 60 % */
+  display:block;
+  pointer-events:none;
+}
+
+/* ① 보드 래퍼를 위치 기준점으로 */
+.board-area{ position:relative; }          /* boardWrap 에 class 추가했음 */
+
+/* ── Zoom FAB (옵션 패널 밖, 좌측 고정) ------------------------ */
+.zoom-fab{                               /* ★ 새 규칙 */
+  position:fixed;                        /* 뷰포트 고정 */
+  top:40%;                               /* 화면 세로 가운데 */
+  right:calc(650px + 10px);              /* ★ 패널폭 650 + 여백 10 */
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:1000;                          /* 패널·그림보다 위 */
+}
+.zoom-fab .btn{                          /* ★ 원형 버튼 */
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  border:none;
+  background:#1D1D1D;
+  color:#fff;
+  border:2px solid #fff;
+  font-size:1.8rem;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background .25s;
+}
+.zoom-fab .btn:hover,
+.zoom-fab .btn.active{ background:#000 }
+
+/* ── 배경색 전환 FAB (보드 왼쪽) ------------------------------ */
+.bg-fab{                                     /* ★ */
+  position:fixed;
+  top:40%;
+  left:10px;                        /* 보드 좌측 여백 10px */
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:1000;
+}
+
+/* 버튼 공통 모양 -------------------------------------------- */
+.bg-fab .btn{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  border:2px solid #fff;                     /* 흰색 외곽선 */
+  background:transparent;                    /* 색상은 JS로 채움 */
+  cursor:pointer;
+  transition:opacity .25s;
+}
+
+/* 버튼 색 – data-bg 값을 그대로 채워줌 (JS에서) */
+.bg-fab .btn[data-bg="#FFFFFF"]{ background:#fff; }
+.bg-fab .btn[data-bg="#000000"]{ background:#000; }
+
+/* 네온 활성 효과 ------------------------------------------- */
+:root{ --neon:#00e1ff; }
+.bg-fab .btn.active{
+  box-shadow:
+    0 0 0 2px #fff,          /* 흰 링 */
+    0 0 6px  var(--neon),
+    0 0 12px var(--neon),
+    0 0 18px var(--neon);
+}
+
+/* =======================================================================
+   ▶ 업로드(+ / –) 버튼 공통 – 원형 40 px 흰색테두리
+   ======================================================================= */
+.zoom-btn{
+  display:inline-flex !important;      /* inline-flex 로 바꿔서 inline 요소 특성 유지 */
+  align-items:center !important;       /* 수직 가운데 정렬 */
+  justify-content:center !important;   /* 수평 가운데 정렬 */
+  padding:0 !important;                /* .btn 에서 오는 여백 제거 */
+
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  border:2px solid #fff;
+  background:#1D1D1D;
+  color:#fff;
+  cursor:pointer;
+  transition:box-shadow .25s;
+}
+
+/* =======================================================================
+   ▶ boardWrap : 버튼 고정용 기준
+   ======================================================================= */
+#boardWrap{ position:relative; }
+
+/* ── SVG 업로드 버튼 위치 (보드 우측-상단) ── */
+#svgBtn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:1000;
+}
+
+/* (선택) Accessible focus 스타일 */
+#svgBtn:focus-visible{
+  outline:3px solid #00eaff;
+  outline-offset:2px;
+}

@@ -19,7 +19,7 @@ html, body {
   cursor: none;                 /* 브라우저 기본 커서 숨기기 */
 }
 
-/* 2‑1. 스티키 푸터를 위한 플렉스 레이아웃 */
+/* 2-1. 스티키 푸터를 위한 플렉스 레이아웃 */
 body {
   display: flex;
   flex-direction: column;
@@ -72,7 +72,8 @@ body {
   color: #fff;
 }
 
-/* 6. 커서 대체 요소 (36×36 링 + 반전 모드) */
+/* 6. 커서 대체 요소 (36×36 링 + 반전 모드)
+   👉 중앙 기준을 위해 translate(-50%, -50%) 추가 */
 .cursor {
   position: fixed;
   left: 0;
@@ -85,6 +86,10 @@ body {
   mix-blend-mode: difference;
   pointer-events: none;
   z-index: 9999;
+
+  /* 중앙 정렬의 핵심: 마우스 좌표를 요소의 중심으로 맞추기 */
+  transform: translate(-50%, -50%);
+  will-change: transform; /* 성능 힌트 */
 }
 
 /* 7. 모든 요소에서도 브라우저 커서 숨김 */
@@ -92,7 +97,8 @@ button, .btn, a, input, textarea {
   cursor: none !important;
 }
 
-/* 8. Canvas Trail: full‑screen canvas for elastic tail */
+/* 8. Canvas Trail: full-screen canvas for elastic tail (꼬리)
+   커서 링(.cursor)보다 한 단계 아래(z-index: 9998) */
 #trail-canvas {
   position: fixed;
   top: 0;

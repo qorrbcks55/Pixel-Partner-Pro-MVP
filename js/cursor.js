@@ -47,7 +47,7 @@ function draw() {
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
   ctx.lineWidth   = 7;
-  ctx.strokeStyle = 'rgba(20, 42, 171, 0.9)';  // RGBA(불투명도 조절도 가능합니다)
+  ctx.strokeStyle = 'rgba(20, 42, 171, 0.9)';  // RGBA(불투명도 조절 가능)
   ctx.beginPath();
   ctx.moveTo(segments[0].x, segments[0].y);
   for (let i = 1; i < SEGMENTS - 1; i++) {
@@ -58,9 +58,11 @@ function draw() {
   ctx.lineTo(segments[SEGMENTS-1].x, segments[SEGMENTS-1].y);
   ctx.stroke();
 
-  // 6) 링 커서 위치 업데이트 ← 여기만 수정!
-  cursor.style.left =  mouseX + 'px';
-  cursor.style.top  =  mouseY + 'px';
+  // 6) 링 커서 위치 업데이트 (중앙 기준)
+  //    CSS에서 .cursor에 transform(-50%, -50%) 추가된 상태
+  //    따라서 단순히 좌표를 그대로 사용하면 중심이 정확히 맞음
+  cursor.style.left = mouseX + 'px';
+  cursor.style.top  = mouseY + 'px';
 
   requestAnimationFrame(draw);
 }
